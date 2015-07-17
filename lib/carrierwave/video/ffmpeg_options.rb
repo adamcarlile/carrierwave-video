@@ -24,9 +24,9 @@ module CarrierWave
         model.send(@logger) if @logger.present?
       end
 
-      def progress(model)
+      def progress(model, version_name)
         if @progress
-          args = model.method(@progress).arity == 3 ? [@format, @format_options] : []
+          args = model.method(@progress).arity == 4 ? [@format, @format_options, version_name] : []
           lambda { |val| model.send(@progress, *(args + [val])) }
         end
       end

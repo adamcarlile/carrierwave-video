@@ -42,7 +42,6 @@ module CarrierWave
     def encode_video(format, opts={})
       # move upload to local cache
       cache_stored_file! if !cached?
-
       @options = CarrierWave::Video::FfmpegOptions.new(format, opts)
       tmp_path = File.join( File.dirname(current_path), "tmpfile.#{format}" )
       file = ::FFMPEG::Movie.new(current_path)
@@ -57,16 +56,17 @@ module CarrierWave
 
       yield(file, @options.format_options) if block_given?
 
-      progress = @options.progress(model)
+      progress = @options.progress(model, version_name)
 
       with_trancoding_callbacks do
         if progress
-          file.transcode(tmp_path, @options.format_params, @options.encoder_options) {
-              |value| progress.call(value)
-          }
+          file.transcode(tmp_path, @options.format_params, @options.encoder_options) do |value| 
+            progress.call(value)
+          end
         else
           file.transcode(tmp_path, @options.format_params, @options.encoder_options)
         end
+        # File.rename tmp_path, [current_path.gsub(/\..*/, ''), format].join('.')
         File.rename tmp_path, current_path
       end
     end
